@@ -1,13 +1,29 @@
+##############################################################################
+#
+# Copyright (c) 2015, 2degrees Limited.
+# All Rights Reserved.
+#
+# This file is part of twapi-users
+# <https://github.com/2degrees/twapi-users>, which is subject to the
+# provisions of the BSD at
+# <http://dev.2degreesnetwork.com/p/2degrees-license.html>. A copy of the
+# license should accompany this distribution. THIS SOFTWARE IS PROVIDED "AS IS"
+# AND ANY AND ALL EXPRESS OR IMPLIED WARRANTIES ARE DISCLAIMED, INCLUDING, BUT
+# NOT LIMITED TO, THE IMPLIED WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST
+# INFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE.
+#
+##############################################################################
+
 from abc import ABCMeta
 from abc import abstractmethod
 from abc import abstractproperty
 from inspect import isgenerator
 from itertools import islice
 
-from nose.tools import eq_
+from twapi.connection.testing import MockConnection
+from twapi.connection.testing import SuccessfulAPICall
 
-from twapi.testing import MockConnection
-from twapi.testing import SuccessfulAPICall
+from nose.tools import eq_
 from twapi.users import BATCH_RETRIEVAL_SIZE_LIMIT
 from twapi.users import Group
 from twapi.users import User
