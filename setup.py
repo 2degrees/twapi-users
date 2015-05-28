@@ -16,6 +16,7 @@
 
 import os
 
+from setuptools import find_packages
 from setuptools import setup
 
 
@@ -44,7 +45,7 @@ setup(
     author_email='2degrees-floss@googlegroups.com',
     url='https://github.com/2degrees/twapi-users/',
     license='BSD (http://dev.2degreesnetwork.com/p/2degrees-license.html)',
-    py_modules=['twapi_users'],
+    packages=find_packages(exclude=['tests']),
     install_requires=[
         'pyrecord >= 1.0a1',
         'voluptuous >= 0.8.7',
