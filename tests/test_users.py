@@ -20,10 +20,10 @@ from abc import abstractproperty
 from inspect import isgenerator
 from itertools import islice
 
+from nose.tools import eq_
 from twapi_connection.testing import MockConnection
 from twapi_connection.testing import SuccessfulAPICall
 
-from nose.tools import eq_
 from twapi_users import BATCH_RETRIEVAL_SIZE_LIMIT
 from twapi_users import Group
 from twapi_users import User
@@ -33,7 +33,7 @@ from twapi_users import get_groups
 from twapi_users import get_users
 
 
-class _ObjectsRetrievalTestCase(object, metaclass=ABCMeta):
+class _ObjectsRetrievalTestCase(metaclass=ABCMeta):
 
     _DATA_RETRIEVER = abstractproperty()
 
@@ -67,9 +67,9 @@ class _ObjectsRetrievalTestCase(object, metaclass=ABCMeta):
         pass
 
 
-class _PaginatedObjectsRetriever(object, metaclass=ABCMeta):
+class _PaginatedObjectsRetriever(metaclass=ABCMeta):
 
-    _API_CALL_PATH_INFO = abstractproperty()
+    _api_endpoint_url = abstractproperty()
 
     def __init__(self, objects):
         super(_PaginatedObjectsRetriever, self).__init__()
@@ -95,33 +95,22 @@ class _PaginatedObjectsRetriever(object, metaclass=ABCMeta):
         return api_calls
 
     def _get_api_call_for_page(self, page_objects):
-        query_string_args = self._get_query_string_args(page_objects)
+        page_number = self._get_current_objects_page_number(page_objects)
         response_body_deserialization = \
             self._get_response_body_deserialization(page_objects)
         api_call = SuccessfulAPICall(
-            self._API_CALL_PATH_INFO,
+            self._get_page_url(page_number),
             'GET',
-            query_string_args,
             response_body_deserialization=response_body_deserialization,
             )
         return api_call
-
-    def _get_query_string_args(self, page_objects):
-        page_number = self._get_current_objects_page_number(page_objects)
-        if 1 < page_number:
-            query_string_args = {'page': str(page_number)}
-        else:
-            query_string_args = None
-
-        return query_string_args
 
     def _get_response_body_deserialization(self, page_objects):
         page_number = self._get_current_objects_page_number(page_objects)
         pages_count = len(self._objects_by_page)
         page_has_successors = page_number < pages_count
         if page_has_successors:
-            next_page_url = \
-                '{}?page={}'.format(self._API_CALL_PATH_INFO, page_number + 1)
+            next_page_url = self._get_page_url(page_number + 1)
         else:
             next_page_url = None
 
@@ -133,6 +122,12 @@ class _PaginatedObjectsRetriever(object, metaclass=ABCMeta):
             }
         return response_body_deserialization
 
+    def _get_page_url(self, page_number):
+        page_url = self._api_endpoint_url
+        if 1 < page_number:
+            page_url += '?page={}'.format(page_number)
+        return page_url
+
     def _get_current_objects_page_number(self, page_objects):
         if self._objects_by_page:
             page_number = self._objects_by_page.index(page_objects) + 1
@@ -142,6 +137,29 @@ class _PaginatedObjectsRetriever(object, metaclass=ABCMeta):
 
     def _get_objects_data(self, objects):
         return objects
+
+
+class _PaginatedObjectsRetrieverWithUpdates(_PaginatedObjectsRetriever):
+
+    def __init__(
+        self,
+        objects,
+        output_future_updates_url,
+        input_future_updates_url=None,
+        ):
+        super(_PaginatedObjectsRetrieverWithUpdates, self).__init__(objects)
+
+        self.output_future_updates_url = output_future_updates_url
+        self.input_future_updates_url = input_future_updates_url
+
+    def _get_response_body_deserialization(self, page_objects):
+        response_body_deserialization = \
+            super(_PaginatedObjectsRetrieverWithUpdates, self) \
+                ._get_response_body_deserialization(page_objects)
+
+        response_body_deserialization['future_updates'] = \
+            self.output_future_updates_url
+        return response_body_deserialization
 
 
 def _paginate(iterable, page_size):
@@ -166,9 +184,26 @@ def _get_next_page_iterable_as_list(iterable, page_size):
 
 
 class _GetUsers(_PaginatedObjectsRetriever):
-    """Simulator for a successful call to :func:`~twapi.get_users`."""
 
-    _API_CALL_PATH_INFO = '/users/'
+    _api_endpoint_url = '/users/'
+
+    def _get_objects_data(self, objects):
+        users_data = []
+        for user in objects:
+            user_data = {f: getattr(user, f) for f in User.field_names}
+            users_data.append(user_data)
+        return users_data
+
+
+class _GetUserUpdates(_PaginatedObjectsRetrieverWithUpdates):
+
+    @property
+    def _api_endpoint_url(self):
+        if self.input_future_updates_url:
+            url = self.input_future_updates_url
+        else:
+            url = '/users/'
+        return url
 
     def _get_objects_data(self, objects):
         users_data = []
@@ -179,15 +214,13 @@ class _GetUsers(_PaginatedObjectsRetriever):
 
 
 class _GetDeletedUsers(_PaginatedObjectsRetriever):
-    """Simulator for a successful call to :func:`~twapi.get_deleted_users`."""
 
-    _API_CALL_PATH_INFO = '/users/deleted/'
+    _api_endpoint_url = '/users/deleted/'
 
 
 class _GetGroups(_PaginatedObjectsRetriever):
-    """Simulator for a successful call to :func:`~twapi.get_groups`."""
 
-    _API_CALL_PATH_INFO = '/groups/'
+    _api_endpoint_url = '/groups/'
 
     def _get_objects_data(self, objects):
         groups_data = []
@@ -198,7 +231,6 @@ class _GetGroups(_PaginatedObjectsRetriever):
 
 
 class _GetGroupMembers(_PaginatedObjectsRetriever):
-    """Simulator for a successful call to :func:`~twapi.get_group_members`."""
 
     def __init__(self, objects, group_id):
         super(_GetGroupMembers, self).__init__(objects)
@@ -206,7 +238,7 @@ class _GetGroupMembers(_PaginatedObjectsRetriever):
         self._group_id = group_id
 
     @property
-    def _API_CALL_PATH_INFO(self):
+    def _api_endpoint_url(self):
         return '/groups/{}/members/'.format(self._group_id)
 
 
@@ -215,6 +247,26 @@ class TestUsersRetrieval(_ObjectsRetrievalTestCase):
     _DATA_RETRIEVER = staticmethod(get_users)
 
     _SIMULATOR = staticmethod(_GetUsers)
+
+    def test_updates_retrieval(self):
+        future_updates_url = 'http://example.com/api/users/?use-this-for=future'
+
+        simulator = _GetUserUpdates([], future_updates_url)
+        with MockConnection(simulator) as connection:
+            _, future_updates_url_retrieved = get_users(connection)
+        eq_(future_updates_url, future_updates_url_retrieved)
+
+        future_updates_url_2 = \
+            'http://example.com/api/users/?use-this-for=super-future'
+        simulator = \
+            _GetUserUpdates([], future_updates_url_2, future_updates_url)
+        with MockConnection(simulator) as connection:
+            _, future_updates_url_retrieved = \
+                get_users(connection, future_updates_url)
+        eq_(future_updates_url_2, future_updates_url_retrieved)
+
+    def _retrieve_data(self, connection):
+        return self._DATA_RETRIEVER(connection)[0]
 
     @staticmethod
     def _generate_deserialized_objects(count):

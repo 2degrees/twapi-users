@@ -14,8 +14,7 @@
 #
 ##############################################################################
 
-from urllib.parse import parse_qsl
-from urllib.parse import urlsplit
+from itertools import chain
 
 from pyrecord import Record
 from voluptuous import Any
@@ -68,22 +67,29 @@ _PAGINATED_RESPONSE_SCHEMA = Schema(
     )
 
 
-def get_users(connection):
+def get_users(connection, updates_url=None):
     """
     Return information about each user that the client is allowed to know
     about.
 
     """
-    users_data = _get_paginated_data(connection, '/users/')
-    for user_data in users_data:
-        user_data = _USER_DATA_SCHEMA(user_data)
-        user = User(**user_data)
-        yield user
+    users_data, future_updates_url = \
+        _get_paginated_data_flattened_with_future_updates_url(
+            connection,
+            updates_url or '/users/',
+            )
+    return (_make_user(u) for u in users_data), future_updates_url
+
+
+def _make_user(user_data):
+    user_data = _USER_DATA_SCHEMA(user_data)
+    user = User(**user_data)
+    return user
 
 
 def get_deleted_users(connection):
     """Return the identifiers of the users that have been deleted."""
-    users_data = _get_paginated_data(connection, '/users/deleted/')
+    users_data, _ = _get_paginated_data_flattened_with_future_updates_url(connection, '/users/deleted/')
     for user_data in users_data:
         user_ids = _USER_ID_SCHEMA(user_data)
         yield user_ids
@@ -95,7 +101,7 @@ def get_groups(connection):
     about.
 
     """
-    groups_data = _get_paginated_data(connection, '/groups/')
+    groups_data = _get_paginated_data_flattened(connection, '/groups/')
     for group_data in groups_data:
         group_data = _GROUP_DATA_SCHEMA(group_data)
         group = Group(**group_data)
@@ -104,36 +110,41 @@ def get_groups(connection):
 
 def get_group_members(connection, group_id):
     """Return the user identifier for each member in group `group_id`."""
-    path_info = '/groups/{}/members/'.format(group_id)
-    users_data = _get_paginated_data(connection, path_info)
+    url = '/groups/{}/members/'.format(group_id)
+    users_data = _get_paginated_data_flattened(connection, url)
     for user_data in users_data:
         user_ids = _USER_ID_SCHEMA(user_data)
         yield user_ids
 
 
-def _get_paginated_data(connection, path_info, query_string_args=None):
-    data_by_page = _get_data_by_page(path_info, query_string_args, connection)
-    for page_data in data_by_page:
-        for datum in page_data:
-            yield datum
+def _get_paginated_data_flattened(connection, url):
+    paginated_data = _get_paginated_data(connection, url)
+    paginated_data_flattened = _flatten_paginated_data(paginated_data)
+    return paginated_data_flattened
 
 
-def _get_data_by_page(path_info, query_string_args, connection):
-    has_more_pages = True
-    while has_more_pages:
-        response = connection.send_get_request(path_info, query_string_args)
+def _get_paginated_data_flattened_with_future_updates_url(connection, url):
+    paginated_data = _get_paginated_data(connection, url)
+
+    first_page_response = next(paginated_data)
+    future_updates_url = first_page_response.get('future_updates')
+
+    paginated_data_restored = chain([first_page_response], paginated_data)
+    paginated_data_flattened = _flatten_paginated_data(paginated_data_restored)
+
+    return paginated_data_flattened, future_updates_url
+
+
+def _flatten_paginated_data(pages):
+    for page in pages:
+        yield from page['results']
+
+
+def _get_paginated_data(connection, url):
+    while url:
+        response = connection.send_get_request(url)
         response = _PAGINATED_RESPONSE_SCHEMA(response)
 
-        response_data = response['results']
-        yield response_data
+        yield response
 
-        next_page_url = response['next']
-        query_string_args = _parse_url_query(next_page_url)
-        has_more_pages = bool(next_page_url)
-
-
-def _parse_url_query(url):
-    url_parts = urlsplit(url)
-    url_query_raw = url_parts.query
-    url_query = dict(parse_qsl(url_query_raw))
-    return url_query
+        url = response['next']
