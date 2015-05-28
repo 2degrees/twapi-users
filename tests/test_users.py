@@ -218,6 +218,17 @@ class _GetDeletedUsers(_PaginatedObjectsRetriever):
     _api_endpoint_url = '/users/deleted/'
 
 
+class _GetDeletedUserUpdates(_PaginatedObjectsRetrieverWithUpdates):
+
+    @property
+    def _api_endpoint_url(self):
+        if self.input_future_updates_url:
+            url = self.input_future_updates_url
+        else:
+            url = '/users/deleted/'
+        return url
+
+
 class _GetGroups(_PaginatedObjectsRetriever):
 
     _api_endpoint_url = '/groups/'
@@ -242,31 +253,42 @@ class _GetGroupMembers(_PaginatedObjectsRetriever):
         return '/groups/{}/members/'.format(self._group_id)
 
 
-class TestUsersRetrieval(_ObjectsRetrievalTestCase):
+class _ObjectWithUpdatesRetrievalTestCase(_ObjectsRetrievalTestCase):
+
+    _UPDATES_SIMULATOR = abstractproperty()
+
+    _API_URL_PATH = abstractproperty()
+
+    def test_updates_retrieval(self):
+        endpoint_url = 'http://example.com/api{}'.format(self._API_URL_PATH)
+
+        future_updates_url = endpoint_url + '?use-this-for=future'
+        self._check_future_updates_url(future_updates_url)
+
+        future_updates_url_2 = endpoint_url + '?use-this-for=super-future'
+        self._check_future_updates_url(future_updates_url_2, future_updates_url)
+
+    @classmethod
+    def _check_future_updates_url(cls, expected_url, input_url=None):
+        simulator = cls._UPDATES_SIMULATOR([], expected_url, input_url)
+        with MockConnection(simulator) as connection:
+            _, url_retrieved = cls._DATA_RETRIEVER(connection, input_url)
+        eq_(expected_url, url_retrieved)
+
+    @classmethod
+    def _retrieve_data(cls, connection):
+        return cls._DATA_RETRIEVER(connection)[0]
+
+
+class TestUsersRetrieval(_ObjectWithUpdatesRetrievalTestCase):
 
     _DATA_RETRIEVER = staticmethod(get_users)
 
     _SIMULATOR = staticmethod(_GetUsers)
 
-    def test_updates_retrieval(self):
-        future_updates_url = 'http://example.com/api/users/?use-this-for=future'
+    _UPDATES_SIMULATOR = staticmethod(_GetUserUpdates)
 
-        simulator = _GetUserUpdates([], future_updates_url)
-        with MockConnection(simulator) as connection:
-            _, future_updates_url_retrieved = get_users(connection)
-        eq_(future_updates_url, future_updates_url_retrieved)
-
-        future_updates_url_2 = \
-            'http://example.com/api/users/?use-this-for=super-future'
-        simulator = \
-            _GetUserUpdates([], future_updates_url_2, future_updates_url)
-        with MockConnection(simulator) as connection:
-            _, future_updates_url_retrieved = \
-                get_users(connection, future_updates_url)
-        eq_(future_updates_url_2, future_updates_url_retrieved)
-
-    def _retrieve_data(self, connection):
-        return self._DATA_RETRIEVER(connection)[0]
+    _API_URL_PATH = '/users/'
 
     @staticmethod
     def _generate_deserialized_objects(count):
@@ -283,11 +305,15 @@ class TestUsersRetrieval(_ObjectsRetrievalTestCase):
         return users
 
 
-class TestDeletedUsersRetrieval(_ObjectsRetrievalTestCase):
+class TestDeletedUsersRetrieval(_ObjectWithUpdatesRetrievalTestCase):
 
     _DATA_RETRIEVER = staticmethod(get_deleted_users)
 
     _SIMULATOR = staticmethod(_GetDeletedUsers)
+
+    _UPDATES_SIMULATOR = staticmethod(_GetDeletedUserUpdates)
+
+    _API_URL_PATH = '/users/deleted/'
 
     @staticmethod
     def _generate_deserialized_objects(count):

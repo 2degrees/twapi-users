@@ -87,12 +87,14 @@ def _make_user(user_data):
     return user
 
 
-def get_deleted_users(connection):
+def get_deleted_users(connection, updates_url=None):
     """Return the identifiers of the users that have been deleted."""
-    users_data, _ = _get_paginated_data_flattened_with_future_updates_url(connection, '/users/deleted/')
-    for user_data in users_data:
-        user_ids = _USER_ID_SCHEMA(user_data)
-        yield user_ids
+    users_data, future_updates_url = \
+        _get_paginated_data_flattened_with_future_updates_url(
+            connection,
+            updates_url or '/users/deleted/',
+            )
+    return (_USER_ID_SCHEMA(u) for u in users_data), future_updates_url
 
 
 def get_groups(connection):
