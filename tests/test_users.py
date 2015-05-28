@@ -20,17 +20,17 @@ from abc import abstractproperty
 from inspect import isgenerator
 from itertools import islice
 
-from twapi.connection.testing import MockConnection
-from twapi.connection.testing import SuccessfulAPICall
+from twapi_connection.testing import MockConnection
+from twapi_connection.testing import SuccessfulAPICall
 
 from nose.tools import eq_
-from twapi.users import BATCH_RETRIEVAL_SIZE_LIMIT
-from twapi.users import Group
-from twapi.users import User
-from twapi.users import get_deleted_users
-from twapi.users import get_group_members
-from twapi.users import get_groups
-from twapi.users import get_users
+from twapi_users import BATCH_RETRIEVAL_SIZE_LIMIT
+from twapi_users import Group
+from twapi_users import User
+from twapi_users import get_deleted_users
+from twapi_users import get_group_members
+from twapi_users import get_groups
+from twapi_users import get_users
 
 
 class _ObjectsRetrievalTestCase(object, metaclass=ABCMeta):
