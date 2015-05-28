@@ -16,7 +16,6 @@
 
 import os
 
-from setuptools import find_packages
 from setuptools import setup
 
 
@@ -28,10 +27,10 @@ _VERSION = \
 _LONG_DESCRIPTION = _README_CONTENTS
 
 setup(
-    name='twapi-users',
+    name='twapi_users',
     version=_VERSION,
-    description='Lightweight abstraction layer for making requests to the '
-        '2degrees platform API',
+    description='API client for user-related endpoints of the 2degrees '
+        'platform',
     long_description=_LONG_DESCRIPTION,
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -45,8 +44,7 @@ setup(
     author_email='2degrees-floss@googlegroups.com',
     url='https://github.com/2degrees/twapi-users/',
     license='BSD (http://dev.2degreesnetwork.com/p/2degrees-license.html)',
-    packages=find_packages(exclude=['tests']),
-    namespace_packages=['twapi'],
+    py_modules=['twapi_users'],
     install_requires=[
         'pyrecord >= 1.0a1',
         'voluptuous >= 0.8.7',

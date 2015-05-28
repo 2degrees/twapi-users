@@ -1,5 +1,5 @@
-API client for the 2degrees platform
-====================================
+API client for user-related endpoints of the 2degrees platform
+==============================================================
 
 .. image:: https://travis-ci.org/2degrees/twapi-users.svg?branch=master
     :target: https://travis-ci.org/2degrees/twapi-users
