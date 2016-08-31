@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# Copyright (c) 2015, 2degrees Limited.
+# Copyright (c) 2015-2016, 2degrees Limited.
 # All Rights Reserved.
 #
 # This file is part of twapi-users
@@ -23,9 +23,10 @@ from nose.tools import eq_
 from twapi_connection.testing import MockConnection
 
 from twapi_users import BATCH_RETRIEVAL_SIZE_LIMIT, get_users, User, \
-    get_deleted_users, get_user, get_groups, Group, get_group_members
+    get_deleted_users, get_user, get_groups, Group, get_group_members, \
+    get_current_user
 from twapi_users.testing import GetUsers, GetUser, GetDeletedUsers, GetGroups, \
-    GetGroupMembers
+    GetGroupMembers, GetCurrentUser
 
 
 class _ObjectsRetrievalTestCase(metaclass=ABCMeta):
@@ -129,6 +130,21 @@ class TestUserRetrieval:
         simulator = GetUser(user)
         with MockConnection(simulator) as connection:
             retrieved_user = get_user(connection, user.id)
+        eq_(user, retrieved_user)
+
+
+class TestCurrentUserRetrieval:
+    def test_user_retrieval(self):
+        user = User(
+            id=1,
+            full_name='User',
+            email_address='user@example.com',
+            organization_name='Example Ltd',
+            job_title='Employee',
+        )
+        simulator = GetCurrentUser(user)
+        with MockConnection(simulator) as connection:
+            retrieved_user = get_current_user(connection)
         eq_(user, retrieved_user)
 
 

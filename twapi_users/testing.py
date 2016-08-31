@@ -154,42 +154,49 @@ class GetUsers(_PaginatedObjectsRetrieverWithUpdates):
         return url
 
     def _get_objects_data(self, objects):
-        users_data = []
-        for user in objects:
-            user_data = {f: getattr(user, f) for f in User.field_names}
-            users_data.append(user_data)
+        users_data = [_get_user_deserialization(user) for user in objects]
         return users_data
 
 
-class GetUser:
+class _BaseUserRetriever:
+
     def __init__(self, user):
-        super(GetUser, self).__init__()
+        super(_BaseUserRetriever, self).__init__()
         self._user = user
 
-    @property
-    def _api_endpoint_url(self):
-        return '/users/{}/'.format(self._user.id)
-
-    def __call__(self):
-        api_call = self._get_api_call(self._user)
-        api_calls = [api_call]
-        return api_calls
-
-    def _get_api_call(self, user):
-        response_body_deserialization = \
-            self._get_response_body_deserialization(user)
-        response = MockResponse(response_body_deserialization)
-        api_call = SuccessfulAPICall(
-            self._api_endpoint_url,
-            'GET',
-            response=response,
-        )
+    def _make_user_retrieval_api_call(self):
+        user_url = self._get_user_url()
+        user_deserialization = _get_user_deserialization(self._user)
+        response = MockResponse(user_deserialization)
+        api_call = SuccessfulAPICall(user_url, 'GET', response=response)
         return api_call
 
-    def _get_response_body_deserialization(self, user):
-        user_data = {f: getattr(user, f) for f in User.field_names}
-        response_body_deserialization = user_data
-        return response_body_deserialization
+    def _get_user_url(self):
+        user_url = '/users/{}/'.format(self._user.id)
+        return user_url
+
+
+class GetUser(_BaseUserRetriever):
+
+    def __call__(self):
+        api_calls = [self._make_user_retrieval_api_call()]
+        return api_calls
+
+
+class GetCurrentUser(_BaseUserRetriever):
+
+    def __call__(self):
+        api_calls = [
+            self._make_current_user_url_retrieval_api_call(),
+            self._make_user_retrieval_api_call(),
+        ]
+        return api_calls
+
+    def _make_current_user_url_retrieval_api_call(self):
+        user_url = self._get_user_url()
+        response = MockResponse(None, {'Content-Location': user_url})
+        api_call = SuccessfulAPICall('/self/', 'GET', response=response)
+        return api_call
 
 
 class GetDeletedUsers(_PaginatedObjectsRetrieverWithUpdates):
@@ -225,3 +232,8 @@ class GetGroupMembers(_PaginatedObjectsRetriever):
     @property
     def _api_endpoint_url(self):
         return '/groups/{}/members/'.format(self._group_id)
+
+
+def _get_user_deserialization(user):
+    user_deserialization = {f: getattr(user, f) for f in User.field_names}
+    return user_deserialization

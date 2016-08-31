@@ -83,10 +83,27 @@ def get_users(connection, updates_url=None):
 
 def get_user(connection, user_id):
     """Return information about user <user_id>."""
-    response = connection.send_get_request('/users/{}/'.format(user_id))
+    return _retrieve_user_from_url(connection, '/users/{}/'.format(user_id))
+
+
+def get_current_user(connection):
+    """Return information about the current user."""
+    user_url = _retrieve_current_url_canonical_url(connection)
+    user = _retrieve_user_from_url(connection, user_url)
+    return user
+
+
+def _retrieve_user_from_url(connection, user_url):
+    response = connection.send_get_request(user_url)
     user_data = response.json()
     user = _make_user(user_data)
     return user
+
+
+def _retrieve_current_url_canonical_url(connection):
+    response = connection.send_get_request('/self/')
+    user_url = response.headers['Content-Location']
+    return user_url
 
 
 def _make_user(user_data):
