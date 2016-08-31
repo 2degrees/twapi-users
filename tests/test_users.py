@@ -22,17 +22,10 @@ from uuid import uuid4
 from nose.tools import eq_
 from twapi_connection.testing import MockConnection
 
-from twapi_users import BATCH_RETRIEVAL_SIZE_LIMIT
-from twapi_users import Group
-from twapi_users import User
-from twapi_users import get_deleted_users
-from twapi_users import get_group_members
-from twapi_users import get_groups
-from twapi_users import get_users
-from twapi_users.testing import GetDeletedUsers
-from twapi_users.testing import GetGroupMembers
-from twapi_users.testing import GetGroups
-from twapi_users.testing import GetUsers
+from twapi_users import BATCH_RETRIEVAL_SIZE_LIMIT, get_users, User, \
+    get_deleted_users, get_user, get_groups, Group, get_group_members
+from twapi_users.testing import GetUsers, GetUser, GetDeletedUsers, GetGroups, \
+    GetGroupMembers
 
 
 class _ObjectsRetrievalTestCase(metaclass=ABCMeta):
@@ -122,6 +115,21 @@ class TestUsersRetrieval(_ObjectWithUpdatesRetrievalTestCase):
                 )
             users.append(user)
         return users
+
+
+class TestUserRetrieval:
+    def test_user_retrieval(self):
+        user = User(
+            id=1,
+            full_name='User',
+            email_address='user@example.com',
+            organization_name='Example Ltd',
+            job_title='Employee',
+        )
+        simulator = GetUser(user)
+        with MockConnection(simulator) as connection:
+            retrieved_user = get_user(connection, user.id)
+        eq_(user, retrieved_user)
 
 
 class TestDeletedUsersRetrieval(_ObjectWithUpdatesRetrievalTestCase):

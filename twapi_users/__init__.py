@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# Copyright (c) 2015, 2degrees Limited.
+# Copyright (c) 2015-2016, 2degrees Limited.
 # All Rights Reserved.
 #
 # This file is part of twapi-users
@@ -79,6 +79,13 @@ def get_users(connection, updates_url=None):
             updates_url or '/users/',
             )
     return (_make_user(u) for u in users_data), future_updates_url
+
+
+def get_user(connection, user_id):
+    """Return information about user <user_id>."""
+    response = connection.send_get_request('/users/{}/'.format(user_id))
+    user = _make_user(response)
+    return user
 
 
 def _make_user(user_data):

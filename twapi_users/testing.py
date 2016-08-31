@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# Copyright (c) 2015, 2degrees Limited.
+# Copyright (c) 2015-2016, 2degrees Limited.
 # All Rights Reserved.
 #
 # This file is part of twapi-users
@@ -158,6 +158,36 @@ class GetUsers(_PaginatedObjectsRetrieverWithUpdates):
             user_data = {f: getattr(user, f) for f in User.field_names}
             users_data.append(user_data)
         return users_data
+
+
+class GetUser:
+    def __init__(self, user):
+        super(GetUser, self).__init__()
+        self._user = user
+
+    @property
+    def _api_endpoint_url(self):
+        return '/users/{}/'.format(self._user.id)
+
+    def __call__(self):
+        api_call = self._get_api_call(self._user)
+        api_calls = [api_call]
+        return api_calls
+
+    def _get_api_call(self, user):
+        response_body_deserialization = \
+            self._get_response_body_deserialization(user)
+        api_call = SuccessfulAPICall(
+            self._api_endpoint_url,
+            'GET',
+            response_body_deserialization=response_body_deserialization,
+        )
+        return api_call
+
+    def _get_response_body_deserialization(self, user):
+        user_data = {f: getattr(user, f) for f in User.field_names}
+        response_body_deserialization = user_data
+        return response_body_deserialization
 
 
 class GetDeletedUsers(_PaginatedObjectsRetrieverWithUpdates):
