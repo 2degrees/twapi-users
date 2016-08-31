@@ -19,7 +19,7 @@ from abc import abstractproperty
 from inspect import isgenerator
 from itertools import islice
 
-from twapi_connection.testing import SuccessfulAPICall
+from twapi_connection.testing import SuccessfulAPICall, MockResponse
 
 from twapi_users import BATCH_RETRIEVAL_SIZE_LIMIT
 from twapi_users import Group
@@ -57,10 +57,11 @@ class _PaginatedObjectsRetriever(metaclass=ABCMeta):
         page_number = self._get_current_objects_page_number(page_objects)
         response_body_deserialization = \
             self._get_response_body_deserialization(page_objects)
+        response = MockResponse(response_body_deserialization)
         api_call = SuccessfulAPICall(
             self._get_page_url(page_number),
             'GET',
-            response_body_deserialization=response_body_deserialization,
+            response=response,
             )
         return api_call
 
@@ -177,10 +178,11 @@ class GetUser:
     def _get_api_call(self, user):
         response_body_deserialization = \
             self._get_response_body_deserialization(user)
+        response = MockResponse(response_body_deserialization)
         api_call = SuccessfulAPICall(
             self._api_endpoint_url,
             'GET',
-            response_body_deserialization=response_body_deserialization,
+            response=response,
         )
         return api_call
 

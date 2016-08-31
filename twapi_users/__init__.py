@@ -84,7 +84,8 @@ def get_users(connection, updates_url=None):
 def get_user(connection, user_id):
     """Return information about user <user_id>."""
     response = connection.send_get_request('/users/{}/'.format(user_id))
-    user = _make_user(response)
+    user_data = response.json()
+    user = _make_user(user_data)
     return user
 
 
@@ -152,8 +153,9 @@ def _flatten_paginated_data(pages):
 def _get_paginated_data(connection, url):
     while url:
         response = connection.send_get_request(url)
-        response = _PAGINATED_RESPONSE_SCHEMA(response)
+        response_data = response.json()
+        response_data = _PAGINATED_RESPONSE_SCHEMA(response_data)
 
-        yield response
+        yield response_data
 
-        url = response['next']
+        url = response_data['next']
