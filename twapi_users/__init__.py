@@ -101,7 +101,7 @@ def _retrieve_user_from_url(connection, user_url):
 
 
 def _retrieve_current_url_canonical_url(connection):
-    response = connection.send_get_request('/self/')
+    response = connection.send_head_request('/self/')
     user_url = response.headers['Content-Location']
     return user_url
 

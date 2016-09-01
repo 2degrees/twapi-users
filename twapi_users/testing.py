@@ -14,8 +14,7 @@
 #
 ##############################################################################
 
-from abc import ABCMeta
-from abc import abstractproperty
+from abc import ABCMeta, abstractmethod, abstractproperty
 from inspect import isgenerator
 from itertools import islice
 
@@ -158,11 +157,15 @@ class GetUsers(_PaginatedObjectsRetrieverWithUpdates):
         return users_data
 
 
-class _BaseUserRetriever:
+class _BaseUserRetriever(metaclass=ABCMeta):
 
     def __init__(self, user):
         super(_BaseUserRetriever, self).__init__()
         self._user = user
+
+    @abstractmethod
+    def __call__(self):
+        pass
 
     def _make_user_retrieval_api_call(self):
         user_url = self._get_user_url()
@@ -195,7 +198,7 @@ class GetCurrentUser(_BaseUserRetriever):
     def _make_current_user_url_retrieval_api_call(self):
         user_url = self._get_user_url()
         response = MockResponse(None, {'Content-Location': user_url})
-        api_call = SuccessfulAPICall('/self/', 'GET', response=response)
+        api_call = SuccessfulAPICall('/self/', 'HEAD', response=response)
         return api_call
 
 

@@ -105,28 +105,12 @@ class TestUsersRetrieval(_ObjectWithUpdatesRetrievalTestCase):
 
     @staticmethod
     def _generate_deserialized_objects(count):
-        users = []
-        for counter in range(count):
-            user = User(
-                id=counter,
-                full_name='User {}'.format(counter),
-                email_address='user-{}@example.com'.format(counter),
-                organization_name='Example Ltd',
-                job_title='Employee {}'.format(counter),
-                )
-            users.append(user)
-        return users
+        return _generate_users(count)
 
 
 class TestUserRetrieval:
     def test_user_retrieval(self):
-        user = User(
-            id=1,
-            full_name='User',
-            email_address='user@example.com',
-            organization_name='Example Ltd',
-            job_title='Employee',
-        )
+        user = _generate_users(1)[0]
         simulator = GetUser(user)
         with MockConnection(simulator) as connection:
             retrieved_user = get_user(connection, user.id)
@@ -135,13 +119,7 @@ class TestUserRetrieval:
 
 class TestCurrentUserRetrieval:
     def test_user_retrieval(self):
-        user = User(
-            id=1,
-            full_name='User',
-            email_address='user@example.com',
-            organization_name='Example Ltd',
-            job_title='Employee',
-        )
+        user = _generate_users(1)[0]
         simulator = GetCurrentUser(user)
         with MockConnection(simulator) as connection:
             retrieved_user = get_current_user(connection)
@@ -190,3 +168,17 @@ class TestGroupMembersRetrieval(_ObjectsRetrievalTestCase):
     @staticmethod
     def _generate_deserialized_objects(count):
         return list(range(count))
+
+
+def _generate_users(count):
+    users = []
+    for counter in range(count):
+        user = User(
+            id=counter,
+            full_name='User {}'.format(counter),
+            email_address='user-{}@example.com'.format(counter),
+            organization_name='Example Ltd',
+            job_title='Employee {}'.format(counter),
+            )
+        users.append(user)
+    return users
