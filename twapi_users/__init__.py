@@ -31,6 +31,7 @@ User = Record.create_type(
     'email_address',
     'organization_name',
     'job_title',
+    'url',
     )
 
 
@@ -43,7 +44,8 @@ _USER_DATA_SCHEMA = Schema(
         'full_name': str,
         'email_address': str,
         'organization_name': str,
-        'job_title': str
+        'job_title': str,
+        'url': str
         },
     required=True,
     extra=False,

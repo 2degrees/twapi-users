@@ -179,6 +179,7 @@ def _generate_users(count):
             email_address='user-{}@example.com'.format(counter),
             organization_name='Example Ltd',
             job_title='Employee {}'.format(counter),
+            url='http://www.2degreesnetwork.com/api/users/{}'.format(counter)
             )
         users.append(user)
     return users
