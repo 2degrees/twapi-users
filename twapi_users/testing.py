@@ -179,6 +179,23 @@ class _BaseUserRetriever(metaclass=ABCMeta):
         return user_url
 
 
+class _BaseUserWithURLRetriever(_BaseUserRetriever):
+
+    def __init__(self, user):
+        super(_BaseUserWithURLRetriever, self).__init__(user)
+
+    def __call__(self):
+        pass
+
+    def _make_user_retrieval_api_call(self):
+        user_url = self._get_user_url()
+        user_deserialization = _get_user_deserialization(self._user)
+        user_deserialization.update({'url': 'http://www.example.com/api/v1/'+user_url})
+        response = MockResponse(user_deserialization)
+        api_call = SuccessfulAPICall(user_url, 'GET', response=response)
+        return api_call
+
+
 class GetUser(_BaseUserRetriever):
 
     def __call__(self):
@@ -186,7 +203,30 @@ class GetUser(_BaseUserRetriever):
         return api_calls
 
 
+class GetUserWithURL(_BaseUserWithURLRetriever):
+
+    def __call__(self):
+        api_calls = [self._make_user_retrieval_api_call()]
+        return api_calls
+
+
 class GetCurrentUser(_BaseUserRetriever):
+
+    def __call__(self):
+        api_calls = [
+            self._make_current_user_url_retrieval_api_call(),
+            self._make_user_retrieval_api_call(),
+        ]
+        return api_calls
+
+    def _make_current_user_url_retrieval_api_call(self):
+        user_url = self._get_user_url()
+        response = MockResponse(None, {'Content-Location': user_url})
+        api_call = SuccessfulAPICall('/self/', 'HEAD', response=response)
+        return api_call
+
+
+class GetCurrentUserWithURL(_BaseUserWithURLRetriever, _BaseUserRetriever):
 
     def __call__(self):
         api_calls = [

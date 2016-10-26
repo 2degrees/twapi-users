@@ -26,7 +26,7 @@ from twapi_users import BATCH_RETRIEVAL_SIZE_LIMIT, get_users, User, \
     get_deleted_users, get_user, get_groups, Group, get_group_members, \
     get_current_user
 from twapi_users.testing import GetUsers, GetUser, GetDeletedUsers, GetGroups, \
-    GetGroupMembers, GetCurrentUser
+    GetGroupMembers, GetCurrentUser, GetUserWithURL, GetCurrentUserWithURL
 
 
 class _ObjectsRetrievalTestCase(metaclass=ABCMeta):
@@ -116,11 +116,25 @@ class TestUserRetrieval:
             retrieved_user = get_user(connection, user.id)
         eq_(user, retrieved_user)
 
+    def test_user_retrieval_with_url(self):
+        user = _generate_users(1)[0]
+        simulator = GetUserWithURL(user)
+        with MockConnection(simulator) as connection:
+            retrieved_user = get_user(connection, user.id)
+        eq_(user, retrieved_user)
+
 
 class TestCurrentUserRetrieval:
     def test_user_retrieval(self):
         user = _generate_users(1)[0]
         simulator = GetCurrentUser(user)
+        with MockConnection(simulator) as connection:
+            retrieved_user = get_current_user(connection)
+        eq_(user, retrieved_user)
+
+    def test_user_retrieval_with_url(self):
+        user = _generate_users(1)[0]
+        simulator = GetCurrentUserWithURL(user)
         with MockConnection(simulator) as connection:
             retrieved_user = get_current_user(connection)
         eq_(user, retrieved_user)
@@ -178,8 +192,7 @@ def _generate_users(count):
             full_name='User {}'.format(counter),
             email_address='user-{}@example.com'.format(counter),
             organization_name='Example Ltd',
-            job_title='Employee {}'.format(counter),
-            url='http://www.2degreesnetwork.com/api/users/{}'.format(counter)
+            job_title='Employee {}'.format(counter)
             )
         users.append(user)
     return users

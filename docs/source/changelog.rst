@@ -18,3 +18,8 @@ Version 1.2 alpha 1
 -------------------
 
 Added URL to User Record Type.
+
+Version 1.2 alpha 2
+-------------------
+
+Removed (temporarily) requirement for URL field, added ignore of all extra fields (temporarily including URL).
