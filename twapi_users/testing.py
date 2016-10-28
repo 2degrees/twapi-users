@@ -14,7 +14,7 @@
 #
 ##############################################################################
 
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractproperty
 from inspect import isgenerator
 from itertools import islice
 
@@ -157,19 +157,21 @@ class GetUsers(_PaginatedObjectsRetrieverWithUpdates):
         return users_data
 
 
-class _BaseUserRetriever(metaclass=ABCMeta):
+class GetUser(object):
 
     def __init__(self, user):
-        super(_BaseUserRetriever, self).__init__()
         self._user = user
 
-    @abstractmethod
     def __call__(self):
-        pass
+        api_calls = [self._make_user_retrieval_api_call()]
+        return api_calls
+
+    def _get_user_deserialization(self, user):
+        return _get_user_deserialization(user)
 
     def _make_user_retrieval_api_call(self):
         user_url = self._get_user_url()
-        user_deserialization = _get_user_deserialization(self._user)
+        user_deserialization = self._get_user_deserialization(self._user)
         response = MockResponse(user_deserialization)
         api_call = SuccessfulAPICall(user_url, 'GET', response=response)
         return api_call
@@ -179,44 +181,19 @@ class _BaseUserRetriever(metaclass=ABCMeta):
         return user_url
 
 
-class _BaseUserWithURLRetriever(_BaseUserRetriever):
+class GetUserWithURL(GetUser):
 
-    def __init__(self, user):
-        super(_BaseUserWithURLRetriever, self).__init__(user)
-
-    def __call__(self):
-        pass
-
-    def _make_user_retrieval_api_call(self):
-        user_url = self._get_user_url()
-        user_deserialization = _get_user_deserialization(self._user)
-        user_deserialization.update({'url': 'http://www.example.com/api/v1/'+user_url})
-        response = MockResponse(user_deserialization)
-        api_call = SuccessfulAPICall(user_url, 'GET', response=response)
-        return api_call
+    def _get_user_deserialization(self, user):
+        user_deserialization = super(GetUserWithURL, self)._get_user_deserialization(user)
+        user_deserialization['url'] = 'http://www.example.com/api/v1' + self._get_user_url()
+        return user_deserialization
 
 
-class GetUser(_BaseUserRetriever):
+class GetCurrentUser(GetUser):
 
     def __call__(self):
-        api_calls = [self._make_user_retrieval_api_call()]
-        return api_calls
-
-
-class GetUserWithURL(_BaseUserWithURLRetriever):
-
-    def __call__(self):
-        api_calls = [self._make_user_retrieval_api_call()]
-        return api_calls
-
-
-class GetCurrentUser(_BaseUserRetriever):
-
-    def __call__(self):
-        api_calls = [
-            self._make_current_user_url_retrieval_api_call(),
-            self._make_user_retrieval_api_call(),
-        ]
+        api_calls = [self._make_current_user_url_retrieval_api_call()]
+        api_calls += super(GetCurrentUser, self).__call__()
         return api_calls
 
     def _make_current_user_url_retrieval_api_call(self):
@@ -226,13 +203,11 @@ class GetCurrentUser(_BaseUserRetriever):
         return api_call
 
 
-class GetCurrentUserWithURL(_BaseUserWithURLRetriever, _BaseUserRetriever):
+class GetCurrentUserWithURL(GetUserWithURL):
 
     def __call__(self):
-        api_calls = [
-            self._make_current_user_url_retrieval_api_call(),
-            self._make_user_retrieval_api_call(),
-        ]
+        api_calls = [self._make_current_user_url_retrieval_api_call()]
+        api_calls += super(GetCurrentUserWithURL, self).__call__()
         return api_calls
 
     def _make_current_user_url_retrieval_api_call(self):
