@@ -1,12 +1,16 @@
-Version 1.0 alpha 1
+Changelog
+=========
+
+Version 1.2 alpha 2
 -------------------
 
-This is the first public release.
+Removed (temporarily) requirement for URL field, added ignore of all extra
+fields (temporarily including URL).
 
-Version 1.0 alpha 2
+Version 1.2 alpha 1
 -------------------
 
-Removed package from namespace `twapi`.
+Added URL to User Record Type.
 
 Version 1.0 alpha 3
 -------------------
@@ -14,12 +18,12 @@ Version 1.0 alpha 3
 - Implemented retrieval of updates for users and deleted users.
 - Exposed testing utilities.
 
-Version 1.2 alpha 1
+Version 1.0 alpha 2
 -------------------
 
-Added URL to User Record Type.
+Removed package from namespace `twapi`.
 
-Version 1.2 alpha 2
+Version 1.0 alpha 1
 -------------------
 
-Removed (temporarily) requirement for URL field, added ignore of all extra fields (temporarily including URL).
+This is the first public release.

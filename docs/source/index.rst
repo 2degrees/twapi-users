@@ -10,7 +10,6 @@ Contents:
    :maxdepth: 2
 
 
-
 Indices and tables
 ------------------
 
@@ -31,10 +30,6 @@ Please go to `our development site at GitHub
 latest code, create pull requests and raise `issues
 <https://github.com/2degrees/twapi-users/issues/>`_.
 
-
-
-Changelog
----------
 
 .. include:: changelog.rst
 
