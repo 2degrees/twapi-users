@@ -47,7 +47,7 @@ setup(
     license='BSD (http://dev.2degreesnetwork.com/p/2degrees-license.html)',
     packages=find_packages(exclude=['tests']),
     install_requires=[
-        'twapi-connection >= 1.1a2',
+        'twapi-connection >= 2.0a2',
         'pyrecord >= 1.0a1',
         'voluptuous >= 0.8.7',
         ],

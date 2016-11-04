@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.2 alpha 3
+-------------------
+
+Updated twapi-connection required version.
+
 Version 1.2 alpha 2
 -------------------
 
