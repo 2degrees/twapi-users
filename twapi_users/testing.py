@@ -165,7 +165,7 @@ class _BaseUserRetriever(metaclass=ABCMeta):
 
     @abstractmethod
     def __call__(self):
-        pass
+        pass  # pragma: no cover
 
     def _make_user_retrieval_api_call(self):
         user_url = self._get_user_url()
