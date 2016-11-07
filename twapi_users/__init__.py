@@ -18,7 +18,7 @@ from itertools import chain
 
 from pyrecord import Record
 from voluptuous import Any
-from voluptuous import Schema, REMOVE_EXTRA
+from voluptuous import Schema
 
 
 BATCH_RETRIEVAL_SIZE_LIMIT = 200
@@ -31,6 +31,7 @@ User = Record.create_type(
     'email_address',
     'organization_name',
     'job_title',
+    'url',
     )
 
 
@@ -44,9 +45,10 @@ _USER_DATA_SCHEMA = Schema(
         'email_address': str,
         'organization_name': str,
         'job_title': str,
+        'url': str
         },
     required=True,
-    extra=REMOVE_EXTRA,
+    extra=False,
     )
 
 
