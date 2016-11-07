@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.2 alpha 4
+-------------------
+
+Added back URL field to User record.
+
 Version 1.2 alpha 3
 -------------------
 
