@@ -192,7 +192,7 @@ def _generate_users(count):
             full_name='User {}'.format(counter),
             email_address='user-{}@example.com'.format(counter),
             organization_name='Example Ltd',
-            job_title='Employee {}'.format(counter),
+            job_title='Employee {}'.format(counter)
             )
         users.append(user)
     return users
