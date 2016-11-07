@@ -17,7 +17,7 @@
 from itertools import chain
 
 from pyrecord import Record
-from voluptuous import Any
+from voluptuous import Any, REMOVE_EXTRA
 from voluptuous import Schema
 
 
@@ -48,7 +48,7 @@ _USER_DATA_SCHEMA = Schema(
         'url': str
         },
     required=True,
-    extra=False,
+    extra=REMOVE_EXTRA,
     )
 
 
