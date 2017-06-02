@@ -62,7 +62,7 @@ _PAGINATED_RESPONSE_SCHEMA = Schema(
     {
         'count': int,
         'next': Any(str, None),
-        'results': [],
+        'results': list,
         },
     required=True,
     extra=True,

@@ -49,7 +49,7 @@ setup(
     install_requires=[
         'twapi-connection >= 2.0a2',
         'pyrecord >= 1.0a1',
-        'voluptuous >= 0.8.7',
+        'voluptuous >= 0.10.5',
         ],
     test_suite='nose.collector',
     )
